@@ -1,0 +1,9 @@
+{
+	"/": [],
+	"/admin": [
+		"src/routes/admin/+page.ts"
+	],
+	"/dashboard": [
+		"src/routes/dashboard/+page.ts"
+	]
+}
