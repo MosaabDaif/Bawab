@@ -1,0 +1,16 @@
+# Rust
+backend/target/
+
+# SQLite database
+backend/library.db
+
+# Environment files (secrets)
+backend/.env
+frontend/.env
+
+# Node
+frontend/node_modules/
+
+# SvelteKit
+frontend/.svelte-kit/
+frontend/build/

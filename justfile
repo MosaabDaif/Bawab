@@ -39,6 +39,11 @@ build:
     cd backend && cargo build --release
     cd frontend && npm run build
 
+# build for production deployment (static frontend + release backend)
+build-prod:
+    cd frontend && PUBLIC_API_URL=/api npm run build
+    cd backend && cargo build --release
+
 # create a new DB from scratch and seed the admin user
 db-reset:
     rm -f backend/library.db

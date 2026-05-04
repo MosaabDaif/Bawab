@@ -137,11 +137,20 @@ async fn main() {
 
     let state = AppState { pool, jwt_secret };
 
-    // CORS: permissive for development; tighten for production
-    let cors = CorsLayer::new()
-        .allow_origin(Any)
-        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]);
+    // CORS: use CORS_ORIGIN env var if set, otherwise allow any origin
+    let cors = {
+        let base = CorsLayer::new()
+            .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+            .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]);
+        match std::env::var("CORS_ORIGIN").ok().as_deref() {
+            Some("*") | None => base.allow_origin(Any),
+            Some(origin) => base.allow_origin(
+                origin
+                    .parse::<header::HeaderValue>()
+                    .expect("CORS_ORIGIN must be a valid origin"),
+            ),
+        }
+    };
 
     // Protected routes (require JWT)
     let protected = Router::new()
@@ -163,7 +172,14 @@ async fn main() {
         .with_state(state)
         .layer(cors);
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    let bind_addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "3000".to_string())
+        .parse()
+        .expect("PORT must be a valid u16");
+    let addr: SocketAddr = format!("{}:{}", bind_addr, port)
+        .parse()
+        .expect("Invalid BIND_ADDR:PORT combination");
     println!("Backend running on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
@@ -174,7 +190,7 @@ async fn main() {
 
 async fn seed_admin(pool: &SqlitePool) {
     let admin_password =
-        std::env::var("ADMIN_PASSWORD").unwrap_or_else(|_| "library2024".to_string());
+        std::env::var("ADMIN_PASSWORD").expect("ADMIN_PASSWORD must be set");
 
     let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM admins")
         .fetch_one(pool)

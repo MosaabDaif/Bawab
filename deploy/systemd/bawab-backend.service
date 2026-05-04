@@ -1,0 +1,23 @@
+[Unit]
+Description=Bawab Library Attendance Backend
+After=network.target
+
+[Service]
+Type=simple
+User=bawab
+Group=bawab
+WorkingDirectory=/opt/bawab
+EnvironmentFile=/opt/bawab/.env
+ExecStart=/opt/bawab/backend
+Restart=on-failure
+RestartSec=5
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/bawab
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
